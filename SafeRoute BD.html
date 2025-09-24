@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traffic Accident Prediction for Bangladesh</title>
+    <style>
+        :root {
+            --primary-color: #00529B;
+            --secondary-color: #00A3E0;
+            --background-color: #f4f7f9;
+            --text-color: #333;
+            --card-bg: #ffffff;
+            --shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            --border-radius: 12px;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+            border-bottom-left-radius: var(--border-radius);
+            border-bottom-right-radius: var(--border-radius);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2.8em;
+            font-weight: 700;
+        }
+
+        header p {
+            margin-top: 0.5rem;
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        main {
+            padding: 2rem 0;
+        }
+
+        .section {
+            background: var(--card-bg);
+            margin-bottom: 2rem;
+            padding: 2.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease;
+        }
+        
+        .section:hover {
+            transform: translateY(-5px);
+        }
+
+        h2 {
+            color: var(--primary-color);
+            border-bottom: 3px solid var(--secondary-color);
+            padding-bottom: 10px;
+            margin-bottom: 2rem;
+            font-size: 2em;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.8rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-bottom: 0.7rem;
+            font-weight: 600;
+            font-size: 1em;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1em;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 5px rgba(0, 163, 224, 0.5);
+        }
+        
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .switch input { 
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .predict-button {
+            grid-column: 1 / -1;
+            padding: 15px;
+            background: linear-gradient(90deg, var(--secondary-color), var(--primary-color));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.2em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.3s;
+            margin-top: 1rem;
+        }
+
+        .predict-button:hover {
+            transform: scale(1.02);
+            box-shadow: 0 6px 20px rgba(0, 82, 155, 0.3);
+        }
+
+        #results {
+            margin-top: 2rem;
+            text-align: center;
+            display: none;
+        }
+
+        .result-card {
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            max-width: 600px;
+            margin: auto;
+        }
+        
+        .result-card.low-risk { background-color: #e9f7ef; border: 1px solid var(--success-color); }
+        .result-card.moderate-risk { background-color: #fff8e1; border: 1px solid var(--warning-color); }
+        .result-card.high-risk { background-color: #fbe9e7; border: 1px solid var(--danger-color); }
+
+        #prediction-text {
+            font-size: 1.8em;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        
+        .low-risk #prediction-text { color: var(--success-color); }
+        .moderate-risk #prediction-text { color: var(--warning-color); }
+        .high-risk #prediction-text { color: var(--danger-color); }
+
+        .risk-meter {
+            width: 100%;
+            height: 30px;
+            background: linear-gradient(90deg, var(--success-color) 33%, var(--warning-color) 33%, var(--warning-color) 66%, var(--danger-color) 66%);
+            border-radius: 15px;
+            position: relative;
+            margin-top: 1rem;
+            overflow: hidden;
+            border: 1px solid #ddd;
+        }
+
+        #risk-indicator {
+            position: absolute;
+            top: -5px;
+            width: 5px;
+            height: 40px;
+            background: black;
+            transition: left 0.5s ease-in-out;
+            left: 15%; /* Default position */
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .info-grid img {
+            max-width: 100%;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+        }
+        
+        .disclaimer {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 2rem;
+            text-align: center;
+            padding: 1rem;
+            background: #e9ecef;
+            border-radius: var(--border-radius);
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            margin-top: 2rem;
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        footer a {
+            color: var(--secondary-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        @media (max-width: 992px) {
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            header h1 { font-size: 2.2em; }
+            header p { font-size: 1em; }
+            .section { padding: 1.5rem; }
+            h2 { font-size: 1.6em; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container">
+            <h1>SafeRoute BD</h1>
+            <p>AI-Powered Traffic Accident Prediction for Bangladesh</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <section id="predictor" class="section">
+            <h2>Assess Your Journey's Risk</h2>
+            <form id="prediction-form" class="form-grid">
+                <!-- Inputs based on your CSV columns -->
+                <div class="form-group">
+                    <label for="weather">Weather Condition</label>
+                    <select id="weather" name="weather" required>
+                        <option value="Clear">Clear</option>
+                        <option value="Rainy">Rainy</option>
+                        <option value="Snowy">Snowy</option>
+                        <option value="Foggy">Foggy</option>
+                        <option value="Stormy">Stormy</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="road-type">Road Type</label>
+                    <select id="road-type" name="road-type" required>
+                        <option value="Highway">Highway</option>
+                        <option value="City Road">City Road</option>
+                        <option value="Rural Road">Rural Road</option>
+                        <option value="Mountain Road">Mountain Road</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="time-of-day">Time of Day</label>
+                    <select id="time-of-day" name="time-of-day" required>
+                        <option value="Morning">Morning</option>
+                        <option value="Afternoon">Afternoon</option>
+                        <option value="Evening">Evening</option>
+                        <option value="Night">Night</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="road-condition">Road Condition</label>
+                    <select id="road-condition" name="road-condition" required>
+                        <option value="Dry">Dry</option>
+                        <option value="Wet">Wet</option>
+                        <option value="Icy">Icy</option>
+                        <option value="Under Construction">Under Construction</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="light-condition">Lighting Condition</label>
+                    <select id="light-condition" name="light-condition" required>
+                        <option value="Daylight">Daylight</option>
+                        <option value="Artificial Light">Artificial Light</option>
+                        <option value="No Light">No Light</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="vehicle-type">Vehicle Type</label>
+                    <select id="vehicle-type" name="vehicle-type" required>
+                        <option value="Car">Car</option>
+                        <option value="Truck">Truck</option>
+                        <option value="Bus">Bus</option>
+                        <option value="Motorcycle">Motorcycle</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="driver-age">Driver's Age</label>
+                    <input type="number" id="driver-age" name="driver-age" min="18" max="90" placeholder="e.g., 35" required>
+                </div>
+                <div class="form-group">
+                    <label for="driver-experience">Driving Experience (Years)</label>
+                    <input type="number" id="driver-experience" name="driver-experience" min="0" max="70" placeholder="e.g., 10" required>
+                </div>
+                <div class="form-group">
+                    <label for="speed-limit">Speed Limit (km/h)</label>
+                    <input type="number" id="speed-limit" name="speed-limit" min="20" max="220" placeholder="e.g., 80" required>
+                </div>
+                <div class="form-group">
+                    <label for="num-vehicles">Vehicles Involved</label>
+                    <input type="number" id="num-vehicles" name="num-vehicles" min="1" max="15" placeholder="e.g., 2" required>
+                </div>
+                <div class="form-group">
+                    <label for="traffic-density">Traffic Density</label>
+                    <select id="traffic-density" name="traffic-density" required>
+                        <option value="0">Low (0)</option>
+                        <option value="1">Medium (1)</option>
+                        <option value="2">High (2)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Driver Alcohol Consumption</label>
+                    <div class="toggle-switch">
+                        <span>No</span>
+                        <label class="switch">
+                            <input type="checkbox" id="driver-alcohol">
+                            <span class="slider"></span>
+                        </label>
+                        <span>Yes</span>
+                    </div>
+                </div>
+
+                <button type="submit" class="predict-button">Predict Risk</button>
+            </form>
+
+            <div id="results">
+                <div id="result-card" class="result-card">
+                    <p id="prediction-text">Low Risk of Accident</p>
+                    <p id="advice-text">Conditions appear favorable. Always remain vigilant.</p>
+                    <div class="risk-meter">
+                        <div id="risk-indicator"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="about" class="section">
+            <h2>About the Project</h2>
+            <div class="info-grid">
+                <div>
+                    <p>This project aims to enhance road safety in Bangladesh by leveraging machine learning to predict the likelihood of traffic accidents. By analyzing various factors such as weather, road conditions, and time of day, our predictive model provides a risk assessment to help drivers make more informed decisions.</p>
+                    <p>The system was trained on a comprehensive dataset of traffic incidents. We evaluated several machine learning algorithms to ensure the highest accuracy, including K-Nearest Neighbors (KNN), Decision Tree, Random Forest, and Support Vector Machine (SVM).</p>
+                    <p>Our goal is to create a practical tool that can be used by anyone to promote safer driving habits across the country.</p>
+                </div>
+                <div>
+                     <!-- Placeholder for the accuracy chart from your Python script -->
+                    <img src="https://i.imgur.com/7gZ9Y0w.png" alt="Chart showing the prediction accuracy of different machine learning models">
+                </div>
+            </div>
+        </section>
+        
+        <section id="how-it-works" class="section">
+            <h2>How It Works in 3 Simple Steps</h2>
+             <div class="form-grid"> <!-- Re-using form-grid for layout -->
+                <div>
+                    <h3>1. Provide Trip Details</h3>
+                    <p>Enter the conditions of your planned journey into the form above. Include details like the weather, road type, time of day, and your driving experience.</p>
+                </div>
+                <div>
+                    <h3>2. AI Analysis</h3>
+                    <p>Our trained machine learning model instantly analyzes your inputs, comparing them against thousands of historical accident records to identify patterns and risk factors.</p>
+                </div>
+                <div>
+                    <h3>3. Receive Your Risk Score</h3>
+                    <p>The model calculates a risk probability, which we translate into a simple, easy-to-understand rating: Low, Moderate, or High, helping you stay aware on the road.</p>
+                </div>
+             </div>
+        </section>
+        
+        <div class="disclaimer">
+            <strong>Disclaimer:</strong> This tool is for informational purposes only and provides a prediction based on historical data. It is not a guarantee of safety. Always drive with caution, adhere to traffic laws, and be aware of your surroundings, regardless of the prediction.
+        </div>
+
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>Project developed from the "Traffic Accident Prediction for Bangladesh" dataset.</p>
+            <p>View the project on <a href="https://github.com/ventricle16/Traffic-accident-prediction-for-Bangladesh" target="_blank">GitHub</a> | Data from <a href="https://www.kaggle.com/datasets/denkuznetz/traffic-accident-prediction" target="_blank">Kaggle</a>.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('prediction-form').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent the form from actually submitting
+
+            // --- SIMULATED PREDICTION LOGIC ---
+            // In a real-world scenario, you would send this data to a server 
+            // where your Python model is running. For this demonstration, 
+            // we'll simulate a prediction based on the inputs.
+
+            // Get values from the form
+            const weather = document.getElementById('weather').value;
+            const roadCondition = document.getElementById('road-condition').value;
+            const timeOfDay = document.getElementById('time-of-day').value;
+            const lightCondition = document.getElementById('light-condition').value;
+            const alcohol = document.getElementById('driver-alcohol').checked;
+            const experience = parseInt(document.getElementById('driver-experience').value);
+            const speedLimit = parseInt(document.getElementById('speed-limit').value);
+            
+            let riskScore = 0;
+
+            // Simple logic to generate a risk score
+            if (['Rainy', 'Snowy', 'Stormy', 'Foggy'].includes(weather)) riskScore += 25;
+            if (['Wet', 'Icy', 'Under Construction'].includes(roadCondition)) riskScore += 25;
+            if (['Night', 'Evening'].includes(timeOfDay) && lightCondition === 'No Light') riskScore += 30;
+            if (alcohol) riskScore += 40;
+            if (experience < 2) riskScore += 15;
+            if (speedLimit > 100) riskScore += 10;
+            
+            // Normalize score to be between 0 and 100
+            riskScore = Math.min(riskScore, 100);
+
+            // Get DOM elements for results
+            const resultsDiv = document.getElementById('results');
+            const resultCard = document.getElementById('result-card');
+            const predictionText = document.getElementById('prediction-text');
+            const adviceText = document.getElementById('advice-text');
+            const riskIndicator = document.getElementById('risk-indicator');
+
+            // Update results based on the score
+            resultCard.className = 'result-card'; // Reset classes
+            if (riskScore > 65) {
+                resultCard.classList.add('high-risk');
+                predictionText.innerText = 'High Risk of Accident';
+                adviceText.innerText = 'Conditions are dangerous. Please consider delaying your trip or exercising extreme caution.';
+                riskIndicator.style.left = '85%';
+            } else if (riskScore > 35) {
+                resultCard.classList.add('moderate-risk');
+                predictionText.innerText = 'Moderate Risk of Accident';
+                adviceText.innerText = 'Increased risk detected. Stay alert, reduce speed, and maintain safe distances.';
+                riskIndicator.style.left = '50%';
+            } else {
+                resultCard.classList.add('low-risk');
+                predictionText.innerText = 'Low Risk of Accident';
+                adviceText.innerText = 'Conditions appear favorable. Always remain vigilant and drive safely.';
+                riskIndicator.style.left = '15%';
+            }
+            
+            // Display the results section
+            resultsDiv.style.display = 'block';
+            
+            // Scroll to the results
+            resultsDiv.scrollIntoView({ behavior: 'smooth' });
+        });
+    </script>
+
+</body>
+</html>
